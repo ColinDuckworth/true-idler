@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>True Idle</title>
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --text-color: white;
+            --accent-color: #ffd700; /* Gold */
+            --button-bg: #4CAF50; /* Green */
+            --button-disabled-bg: rgba(255,255,255,0.2);
+            --card-bg: rgba(255,255,255,0.15);
+            --container-bg: rgba(255,255,255,0.1);
+            --prestige-section-bg: rgba(255,215,0,0.2);
+            --prestige-border: gold;
+            --notification-bg: rgba(76,175,80,0.9);
+            --timer-bg: rgba(255,193,7,0.3);
+            --reset-btn-bg: #f44336; /* Red */
+        }
+
+        /* Base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better flow on larger screens */
+        }
+        .container {
+            max-width: 900px; /* Slightly wider container */
+            width: 100%;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* Add a subtle shadow */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.8em; /* Slightly larger title */
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255,215,0,0.5); /* Glowing effect */
+        }
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            border-bottom: 2px solid rgba(255,215,0,0.5);
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+
+        /* Game Explanation Section */
+        .game-explanation {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .game-explanation p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Larger stat cards */
+            gap: 20px; /* Increased gap */
+            margin-bottom: 30px;
+        }
+        .stat {
+            background: var(--card-bg);
+            padding: 20px; /* More padding */
+            border-radius: 12px; /* Slightly more rounded */
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease-in-out;
+        }
+        .stat:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+        }
+        .stat-value {
+            font-size: 2em; /* Larger value */
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+        .stat div:last-child {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Upgrades Section */
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Wider upgrade cards */
+            gap: 20px;
+            margin: 20px 0 30px;
+        }
+        .upgrade {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px; /* Reduced margin for description below */
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .upgrade-header span:first-child {
+            color: var(--accent-color);
+        }
+        .upgrade-description {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 15px; /* Space between description and button */
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 12px 15px; /* More padding */
+            border: none;
+            border-radius: 8px; /* More rounded */
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--button-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: background 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        button:hover:not(:disabled) {
+            background: #5cb85c; /* Slightly darker green on hover */
+            transform: translateY(-2px);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: var(--button-disabled-bg);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Prestige Section */
+        .prestige-section {
+            background: var(--prestige-section-bg);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 2px solid var(--prestige-border);
+            box-shadow: 0 0 20px rgba(255,215,0,0.4); /* Stronger glow for prestige */
+            text-align: center; /* Center prestige button and info */
+        }
+        .prestige-section h3 {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: var(--prestige-border);
+            text-shadow: 0 0 8px rgba(255,215,0,0.7);
+        }
+        .prestige-section p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: rgba(255,255,255,0.9);
+        }
+        .prestige-section p span {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        .prestige-upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Wider prestige upgrade cards */
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .prestige-upgrade {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            text-align: left; /* Align text within card to left */
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .prestige-upgrade div:first-child {
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .prestige-upgrade button {
+            margin-top: 10px; /* Space between description and button */
+            background: #FFD700; /* Gold button for prestige upgrades */
+            color: #333; /* Darker text for gold button */
+        }
+        .prestige-upgrade button:hover:not(:disabled) {
+            background: #e6c200;
+        }
+        .prestige-upgrade button:disabled {
+            background: rgba(255,215,0,0.3);
+            color: rgba(0,0,0,0.5);
+        }
+
+        /* Notifications and Timer */
+        .notification, .session-timer {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0; /* Start hidden */
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-10px); /* Slide in effect */
+        }
+        .notification.show, .session-timer.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .notification {
+            background: var(--notification-bg);
+        }
+        .session-timer {
+            background: var(--timer-bg);
+            color: rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,193,7,0.5);
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--reset-btn-bg);
+            padding: 10px 15px;
+            border-radius: 50%; /* Make it circular */
+            width: 60px; /* Fixed size */
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8em; /* Smaller text for circle button */
+            line-height: 1; /* Adjust line height for centering */
+            box-shadow: 0 4px 15px rgba(244,67,54,0.4);
+            z-index: 1000;
+        }
+        .reset-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.05);
+        }
+        .reset-btn:active {
+            transform: scale(1);
+        }
+
+        /* Custom Modal for Reset Confirmation */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Ensure it's on top */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: #333;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+        .modal-content h4 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: var(--accent-color);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+        }
+        .modal-buttons button {
+            width: 45%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .modal-buttons .confirm-btn {
+            background: var(--reset-btn-bg);
+        }
+        .modal-buttons .confirm-btn:hover {
+            background: #d32f2f;
+        }
+        .modal-buttons .cancel-btn {
+            background: var(--button-bg);
+        }
+        .modal-buttons .cancel-btn:hover {
+            background: #5cb85c;
+        }
+
+        /* Media Queries for smaller screens */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .stats, .upgrades, .prestige-upgrades {
+                grid-template-columns: 1fr; /* Stack on small screens */
+            }
+            .reset-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 0.7em;
+                bottom: 15px;
+                right: 15px;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+        }
+
+        /* Footer Link Styling */
+        .footer-link {
+            text-align: center;
+            margin-top: 40px; /* Space from the last section */
+            margin-bottom: 20px; /* Space from the bottom of the page */
+        }
+        .footer-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 1.1em;
+            padding: 10px 20px;
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.1s ease;
+            display: inline-block; /* Allows padding and margin */
+        }
+        .footer-link a:hover {
+            background: var(--accent-color);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,215,0,0.3);
+        }
+        .footer-link a:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛌 True Idle</h1>
+        
+        <div id="notification" class="notification"></div>
+        <div id="sessionTimer" class="session-timer"></div>
+
+        <div class="game-explanation">
+            <p>Welcome to True Idle! Your goal is to generate as many coins as possible. But there's a twist: your empire only grows when the game's tab is *closed*. Invest in upgrades, then close your browser and watch your fortune accumulate offline!</p>
+        </div>
+        
+        <h2 class="section-title">Current Stats</h2>
+        <div class="stats">
+            <div class="stat"><div class="stat-value" id="coins">0</div><div>Coins</div></div>
+            <div class="stat"><div class="stat-value" id="offlineCps">0</div><div>Offline Coins/sec</div></div>
+            <div class="stat"><div class="stat-value" id="prestige">0</div><div>★ Prestige Level</div></div>
+            <div class="stat"><div class="stat-value" id="pp">0</div><div>Prestige Points</div></div>
+        </div>
+        
+        <h2 class="section-title">Upgrades</h2>
+        <div class="upgrades" id="upgrades"></div>
+        
+        <div class="prestige-section">
+            <h3>★ Prestige System</h3>
+            <p>Prestige Points: <span id="availablePP">0</span> | Next Prestige at: <span id="nextPrestige">1M</span> coins earned (<span id="earnedSinceLastPrestige">0</span> earned this cycle)</p>
+            <button onclick="prestige()" id="prestigeBtn" disabled>Prestige (Reset for bonuses)</button>
+            <div class="prestige-upgrades" id="prestigeUpgrades"></div>
+        </div>
+
+        <div class="footer-link">
+            <a href="https://colinduckworth.github.io/home/" target="_blank" rel="noopener noreferrer">return</a>
+        </div>
+    </div>
+    
+    <button class="reset-btn" onclick="showResetModal()">Reset</button>
+
+    <div id="resetModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h4>Confirm Reset</h4>
+            <p>Are you sure you want to reset all game progress? This cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="confirm-btn" onclick="resetGame()">Reset Game</button>
+                <button class="cancel-btn" onclick="hideResetModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Define the initial default game state, including names and descriptions
+        const defaultGameData = {
+            coins: 50, // Starting coins
+            totalEarned: 0, // Total coins earned across all prestige levels (never resets)
+            lastPrestigeTotalEarned: 0, // totalEarned at the moment of the last prestige
+            cps: 0, // This now represents OFFLINE coins per second
+            prestigeLevel: 0,
+            prestigePoints: 0,
+            lastSave: Date.now(), // Timestamp of the last save
+            sessionStart: Date.now(), // Timestamp when the current session started
+            sessionMultiplier: 1, // Multiplier applied to offline gains, decays while online
+            upgrades: [ // Definitions for regular upgrades
+                { name: "🛌 Sleep Study Subject", count: 0, cost: 10, cps: 1, desc: "These subjects unwittingly power a coin-generating machine with sleep-induced brain waves."},
+                { name: "👹 Sleep Demon", count: 0, cost: 100, cps: 8, desc: "Summon a sleep demon for fun and profit! DISCLAIMER: Demonic contracts may cause perpetual waking nightmares."},
+                { name: "🏭 Mattress Factory", count: 0, cost: 1000, cps: 50, desc: "Definitely no money laundering here! Just a normal, run-of-the-mill, not-mob-affiliated mattress factory."},
+                { name: "🗿 True Idol", count: 0, cost: 10000, cps: 300, desc: "Worship at the Altar of Nothingness! Close the tab already, are you trying to anger the gods?!"}
+            ],
+            // prestigeUpgrades are levels, their names/descs come from prestigeDefs
+            prestigeUpgrades: {
+                globalBonus: 0,      // +10% global production per level (affects offline CPS)
+                autoWorker: 0,       // Auto-buy workers
+                extendedIdle: 0,     // Offline bonus multipliers
+                focusMode: 0         // Session timer multiplier (only affects offline gains)
+            }
+        };
+
+        // Current game state (starts as a copy of defaultGameData, but will be loaded from save)
+        // Use structuredClone for a deep copy if available (newer browsers) or JSON.parse(JSON.stringify())
+        let game = JSON.parse(JSON.stringify(defaultGameData)); 
+        
+        // Prestige upgrade definitions - Costs and descriptions for prestige upgrades
+        const prestigeDefs = {
+            globalBonus: { name: "Global Boost", cost: [5,10,20,40,80], max: 5, desc: "Increases all OFFLINE production by +10% per level." },
+            autoWorker: { name: "Auto-Hiring", cost: [8,16,32], max: 3, desc: "Automatically hire Sleep Study Subjects when affordable (level 1-3: faster)." },
+            extendedIdle: { name: "Idle Bonus", cost: [10,25,50], max: 3, desc: "Significantly boosts OFFLINE earnings multiplier after 5 minutes offline." },
+            focusMode: { name: "Focus Mode", cost: [15,30,60], max: 3, desc: "Grants a temporary session multiplier that boosts OFFLINE gains. (Close browser to lock in!)" }
+        };
+
+        // DOM elements cache - Storing references to frequently accessed DOM elements for performance
+        const dom = {
+            coins: document.getElementById('coins'),
+            offlineCps: document.getElementById('offlineCps'),
+            prestige: document.getElementById('prestige'),
+            pp: document.getElementById('pp'),
+            availablePP: document.getElementById('availablePP'),
+            nextPrestige: document.getElementById('nextPrestige'),
+            earnedSinceLastPrestige: document.getElementById('earnedSinceLastPrestige'), // New DOM element for the new stat
+            notification: document.getElementById('notification'),
+            sessionTimer: document.getElementById('sessionTimer'),
+            upgradesDiv: document.getElementById('upgrades'),
+            prestigeBtn: document.getElementById('prestigeBtn'),
+            prestigeUpgradesDiv: document.getElementById('prestigeUpgrades'),
+            upgradeButtons: [], // To store references to upgrade buttons
+            prestigeUpgradeButtons: {}, // To store references to prestige upgrade buttons
+            resetModalOverlay: document.getElementById('resetModalOverlay') // For the custom modal
+        };
+        
+        // Utility function to format large numbers for display
+        const fmt = n => n < 1e3 ? Math.floor(n) : n < 1e6 ? (n/1e3).toFixed(1)+'K' : n < 1e9 ? (n/1e6).toFixed(1)+'M' : n < 1e12 ? (n/1e12).toFixed(1)+'B' : (n/1e12).toFixed(1)+'T';
+        
+        // --- Game State Management (Save/Load) ---
+
+        // Saves the current game state to localStorage
+        const saveGame = () => {
+            // Update lastSave timestamp right before saving
+            game.lastSave = Date.now(); 
+            // Store the current tab ID in localStorage to detect true offline sessions
+            sessionStorage.setItem('currentTabId', currentTabId); // Update currentTabId in session storage for the current session
+            localStorage.setItem('lastActiveSessionId', currentTabId); // Mark this tab as the last active one
+            localStorage.setItem('trueIdle', JSON.stringify(game));
+            console.log('Game saved!', game);
+        };
+
+        // Loads the game state from localStorage
+        const loadGame = () => {
+            try {
+                const saved = localStorage.getItem('trueIdle');
+                if (saved) {
+                    const loadedGame = JSON.parse(saved);
+
+                    // Explicitly apply properties from loadedGame, falling back to defaultGameData
+                    // This ensures new properties in defaultGameData are present even if not in old save
+                    game.coins = loadedGame.coins !== undefined ? loadedGame.coins : defaultGameData.coins;
+                    game.totalEarned = loadedGame.totalEarned !== undefined ? loadedGame.totalEarned : defaultGameData.totalEarned;
+                    game.lastPrestigeTotalEarned = loadedGame.lastPrestigeTotalEarned !== undefined ? loadedGame.lastPrestigeTotalEarned : defaultGameData.lastPrestigeTotalEarned;
+                    game.prestigeLevel = loadedGame.prestigeLevel !== undefined ? loadedGame.prestigeLevel : defaultGameData.prestigeLevel;
+                    game.prestigePoints = loadedGame.prestigePoints !== undefined ? loadedGame.prestigePoints : defaultGameData.prestigePoints;
+                    game.lastSave = loadedGame.lastSave !== undefined ? loadedGame.lastSave : defaultGameData.lastSave;
+                    game.sessionStart = loadedGame.sessionStart !== undefined ? loadedGame.sessionStart : defaultGameData.sessionStart;
+                    game.sessionMultiplier = loadedGame.sessionMultiplier !== undefined ? loadedGame.sessionMultiplier : defaultGameData.sessionMultiplier;
+
+                    // For upgrades: always use the latest definitions (names, descs, costs, cps) from defaultGameData.upgrades,
+                    // and only load the 'count' from the saved game.
+                    // This ensures that new names/descriptions apply even to old save files.
+                    game.upgrades = defaultGameData.upgrades.map((defaultUp, idx) => {
+                        const loadedUp = loadedGame.upgrades && loadedGame.upgrades[idx] ? loadedGame.upgrades[idx] : null;
+                        return {
+                            name: defaultUp.name, // Always use current script's name
+                            count: loadedUp ? loadedUp.count : 0, // Load count from save, or 0 if new/missing
+                            cost: defaultUp.cost, // Always use current script's cost
+                            cps: defaultUp.cps, // Always use current script's cps
+                            desc: defaultUp.desc // Always use current script's description
+                        };
+                    });
+
+                    // For prestigeUpgrades: only load the level from saved game, names/descs are from prestigeDefs.
+                    // This is robust because prestigeDefs is a separate constant that is never overwritten by save data.
+                    Object.keys(defaultGameData.prestigeUpgrades).forEach(key => {
+                        game.prestigeUpgrades[key] = (loadedGame.prestigeUpgrades && loadedGame.prestigeUpgrades[key] !== undefined)
+                                            ? loadedGame.prestigeUpgrades[key]
+                                            : defaultGameData.prestigeUpgrades[key]; // Fallback to default level (0)
+                    });
+
+                    console.log('Game loaded successfully. Current game state:', game);
+
+                } else {
+                    // No saved game found, game state is already the default (due to initial `game = JSON.parse(JSON.stringify(defaultGameData));`)
+                    console.log('No saved game found, starting new game from default state.');
+                }
+            } catch(e) {
+                console.error("Error loading game, corrupted save detected. Clearing save and restarting:", e);
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        // --- Custom Reset Modal Functions ---
+
+        // Shows the reset confirmation modal
+        function showResetModal() {
+            console.log('showResetModal called: Displaying reset confirmation modal.');
+            dom.resetModalOverlay.classList.add('show');
+        }
+
+        // Hides the reset confirmation modal
+        function hideResetModal() {
+            console.log('hideResetModal called: Hiding reset confirmation modal.');
+            dom.resetModalOverlay.classList.remove('show');
+        }
+
+        // Resets the game to its initial state
+        function resetGame() {
+            console.log('resetGame called: Initiating full game reset.');
+            localStorage.clear(); // Clear all saved data from localStorage
+            sessionStorage.clear(); // Clear all session data from sessionStorage
+            console.log('LocalStorage and SessionStorage cleared. Reloading page in 50ms...');
+            // Add a small delay before reloading to ensure localStorage.clear() has time to process (though it's sync)
+            setTimeout(() => {
+                location.reload(); // Reload the page to restart the game from a clean state
+            }, 50); // 50ms delay
+        }
+        
+        // --- Core Game Logic Functions ---
+
+        // Calculates the current offline coins per second (CPS)
+        function updateOfflineCPS() {
+            // Global multiplier from prestige upgrade
+            const globalMult = 1 + (game.prestigeUpgrades.globalBonus * 0.1);
+            // Sum of CPS from all purchased upgrades, multiplied by global bonus
+            game.cps = Math.floor(game.upgrades.reduce((total, up) => total + (up.count * up.cps), 0) * globalMult);
+        }
+        
+        // Buys an upgrade at the given index
+        function buyUpgrade(idx) {
+            const up = game.upgrades[idx];
+            // Calculate current cost based on exponential formula
+            const cost = Math.floor(up.cost * Math.pow(1.15, up.count));
+            if (game.coins >= cost) {
+                game.coins -= cost;
+                up.count++; // Increment upgrade count
+                updateOfflineCPS(); // Recalculate offline CPS as it has changed
+            }
+            updateUpgradeDisplay(idx); // Update the specific upgrade's display
+            updateMainStatsDisplay(); // Update coins display
+        }
+        
+        // Calculates the potential Prestige Points based on total earned coins
+        function calculatePrestigePoints() {
+            // Formula for PP: floor(sqrt(totalEarned / 1,000,000))
+            return Math.floor(Math.sqrt(game.totalEarned / 1000000));
+        }
+        
+        // Triggers the prestige action
+        function prestige() {
+            const newPP = calculatePrestigePoints();
+            // Only allow prestige if new PP can be gained
+            if (newPP > game.prestigeLevel) {
+                game.prestigePoints += (newPP - game.prestigeLevel); // Add new PP
+                game.prestigeLevel = newPP; // Update prestige level
+                
+                // Set lastPrestigeTotalEarned to current totalEarned before resetting other stats
+                game.lastPrestigeTotalEarned = game.totalEarned;
+
+                game.coins = 50 + (game.prestigeLevel * 100); // Starting coins bonus
+                game.upgrades.forEach(up => up.count = 0); // Reset upgrade counts
+                game.sessionStart = Date.now(); // Reset session timer on prestige
+                // The sessionMultiplier will be recalculated by updateSessionTimer and used in processOffline
+
+                updateOfflineCPS(); // Recalculate offline CPS
+                saveGame(); // Save immediately after prestige
+                createUI(); // Recreate UI to reset upgrade buttons states
+                updateDisplay(); // Full display update
+                showNotification(`Prestiged! Gained ${newPP - (game.prestigeLevel - 1)} Prestige Points.`, 5000);
+            } else {
+                showNotification(`Not enough total earned coins for Prestige. Need ${fmt(Math.pow(game.prestigeLevel + 1, 2) * 1000000)} total earned coins for next Prestige.`, 5000);
+            }
+        }
+        
+        // Buys a prestige upgrade
+        function buyPrestigeUpgrade(key) {
+            const def = prestigeDefs[key];
+            const level = game.prestigeUpgrades[key];
+            if (level < def.max) {
+                const cost = def.cost[level];
+                if (game.prestigePoints >= cost) {
+                    game.prestigePoints -= cost;
+                    game.prestigeUpgrades[key]++; // Increment prestige upgrade level
+                    updateOfflineCPS(); // CPS might change due to global bonus
+                    saveGame(); // Save immediately after prestige upgrade
+                    showNotification(`Purchased ${def.name}!`, 3000); // Success notification
+                } else {
+                    showNotification(`Not enough Prestige Points to buy ${def.name}. Needs ${fmt(cost)} PP.`, 3000); // Fail notification
+                }
+            } else {
+                showNotification(`${def.name} is already at max level.`, 3000); // Max level notification
+            }
+            updatePrestigeUpgradeDisplay(key); // Update specific prestige upgrade display
+            updateMainStatsDisplay(); // Update PP display
+        }
+        
+        // Processes offline gains when the game loads after being truly closed
+        function processOffline() {
+            const now = Date.now();
+            const lastSaveTimestamp = game.lastSave; // Use the timestamp from loaded game state
+
+            // Check if this is a new tab instance (true offline period)
+            // currentTabId is generated on load and stored in sessionStorage.
+            // lastActiveSessionId is stored in localStorage on save (including beforeunload).
+            const lastActiveSessionId = localStorage.getItem('lastActiveSessionId');
+
+            if (currentTabId !== lastActiveSessionId) {
+                // This is a new tab instance, indicating a true "offline" period.
+                console.log("New tab instance detected. Processing offline gains.");
+                const offlineSeconds = Math.floor((now - lastSaveTimestamp) / 1000); 
+                
+                if (offlineSeconds > 0) { // Process if any time has passed
+                    let actualOfflineTime = Math.min(offlineSeconds, 86400); // Cap at 24 hours (86400 seconds)
+                    let offlineGains = game.cps * actualOfflineTime; // Base offline gains
+
+                    // Apply session multiplier (if focusMode active when window was closed)
+                    // The sessionMultiplier in `game` reflects the value when the tab was closed.
+                    offlineGains *= game.sessionMultiplier;
+                    
+                    // Apply extended idle bonus AFTER session multiplier
+                    const idleLevel = game.prestigeUpgrades.extendedIdle;
+                    if (idleLevel > 0 && actualOfflineTime >= 300) { // If extended idle and offline for at least 5 minutes (300s)
+                        const multiplier = 1 + (idleLevel * 0.5); // +50% per level
+                        offlineGains = Math.floor(offlineGains * multiplier);
+                    }
+                    
+                    offlineGains = Math.floor(offlineGains); // Ensure gains are an integer
+
+                    game.coins += offlineGains;
+                    game.totalEarned += offlineGains; // Add to total earned for prestige
+                    
+                    if (offlineGains > 0) {
+                        showNotification(
+                            `Welcome back! You were away for ${formatTime(offlineSeconds)}. Earned: ${fmt(offlineGains)} coins.`,
+                            5000
+                        );
+                    }
+                }
+            } else {
+                // This is a page refresh or navigation within the same tab instance.
+                // DO NOT execute processOffline(). Offline gains are skipped.
+                console.log("Same tab instance detected. Skipping offline gains.");
+            }
+            
+            // Always update lastSave timestamp to now, regardless of offline gain processing.
+            // This ensures future offline calculations are accurate from this point.
+            game.lastSave = now; 
+        }
+
+        // Formats seconds into a human-readable time string
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days}d ${hours % 24}h`;
+            if (hours > 0) return `${hours}h ${minutes % 60}m`;
+            if (minutes > 0) return `${minutes}m ${Math.floor(seconds % 60)}s`;
+            return `${Math.floor(seconds)}s`;
+        }
+        
+        // Updates and displays the session multiplier (Focus Mode)
+        function updateSessionTimer() {
+            const focusLevel = game.prestigeUpgrades.focusMode;
+            if (focusLevel > 0) {
+                const elapsed = (Date.now() - game.sessionStart) / 1000;
+                // Base multiplier: 1.5x, 2x, 2.5x for levels 1, 2, 3
+                const baseMultiplier = 1 + (focusLevel * 0.5); 
+                // Decay rate: 0.02, 0.015, 0.01 per second (slower decay with higher levels)
+                const decayRate = 0.02 - (focusLevel - 1) * 0.005; 
+                // Calculate the decaying multiplier, ensuring it doesn't go below 1x
+                const decay = Math.max(1, baseMultiplier - (elapsed * decayRate)); 
+                game.sessionMultiplier = decay; // This value is saved and used for offline gains
+                
+                dom.sessionTimer.innerHTML = 
+                    `Session Multiplier (Offline Bonus): ${decay.toFixed(2)}x (Bonus active! Close browser to lock in for offline!)`;
+                dom.sessionTimer.classList.add('show');
+            } else {
+                dom.sessionTimer.classList.remove('show');
+                game.sessionMultiplier = 1; // Ensure multiplier is 1 if no focus mode
+            }
+        }
+
+        // Displays a temporary notification message
+        function showNotification(message, duration = 3000) {
+            dom.notification.textContent = message;
+            dom.notification.classList.add('show');
+            setTimeout(() => dom.notification.classList.remove('show'), duration);
+        }
+        
+        // --- Display Update Functions (optimized for less DOM manipulation) ---
+
+        // Updates the main stats display (coins, CPS, prestige level, PP)
+        function updateMainStatsDisplay() {
+            dom.coins.textContent = fmt(game.coins);
+            dom.offlineCps.textContent = fmt(game.cps);
+            dom.prestige.textContent = game.prestigeLevel;
+            dom.pp.textContent = game.prestigePoints;
+            dom.availablePP.textContent = game.prestigePoints;
+            // Calculate next prestige target based on current prestige level
+            dom.nextPrestige.textContent = fmt(Math.pow(calculatePrestigePoints() + 1, 2) * 1000000);
+            
+            // Calculate earned since last prestige
+            const earnedSinceLastPrestigeValue = Math.max(0, game.totalEarned - game.lastPrestigeTotalEarned);
+            dom.earnedSinceLastPrestige.textContent = fmt(earnedSinceLastPrestigeValue);
+
+            // Enable/disable prestige button based on eligibility
+            const canPrestige = calculatePrestigePoints() > game.prestigeLevel;
+            dom.prestigeBtn.disabled = !canPrestige;
+        }
+
+        // Updates the display for a specific regular upgrade button
+        function updateUpgradeDisplay(idx) {
+            const up = game.upgrades[idx];
+            const cost = Math.floor(up.cost * Math.pow(1.15, up.count));
+            const btn = dom.upgradeButtons[idx];
+            if (btn) {
+                btn.disabled = game.coins < cost; // Disable if not enough coins
+                btn.textContent = `${up.name} (${up.count}) - Cost: ${fmt(cost)} coins`;
+            }
+        }
+
+        // Updates the display for all regular upgrade buttons
+        function updateAllUpgradesDisplay() {
+            game.upgrades.forEach((_, idx) => updateUpgradeDisplay(idx));
+        }
+
+        // Updates the display for a specific prestige upgrade button
+        function updatePrestigeUpgradeDisplay(key) {
+            const def = prestigeDefs[key];
+            const level = game.prestigeUpgrades[key];
+            const btn = dom.prestigeUpgradeButtons[key];
+            if (btn) {
+                const cost = level < def.max ? def.cost[level] : 0;
+                // Prestige buttons are always clickable as per user request.
+                // Affordability is handled within the buyPrestigeUpgrade function.
+                btn.disabled = false; 
+                
+                btn.textContent = level >= def.max ? 
+                    `${def.name} (MAX)` : 
+                    `${def.name} (${level}/${def.max}) - Cost: ${cost} PP`;
+            }
+        }
+
+        // Updates the display for all prestige upgrade buttons
+        function updateAllPrestigeUpgradesDisplay() {
+            Object.keys(prestigeDefs).forEach(key => updatePrestigeUpgradeDisplay(key));
+        }
+
+        // Main function to update all dynamic UI elements
+        function updateDisplay() {
+            updateMainStatsDisplay();
+            updateAllUpgradesDisplay();
+            updateAllPrestigeUpgradesDisplay();
+        }
+        
+        // --- UI Creation ---
+
+        // Creates the dynamic UI elements for upgrades and prestige upgrades
+        function createUI() {
+            // Clear existing UI elements to prevent duplicates on prestige (when UI is rebuilt)
+            dom.upgradesDiv.innerHTML = '';
+            dom.prestigeUpgradesDiv.innerHTML = '';
+            dom.upgradeButtons = []; // Clear cached buttons
+            dom.prestigeUpgradeButtons = {}; // Clear cached buttons
+
+            // Create regular upgrade buttons
+            game.upgrades.forEach((up, idx) => {
+                const div = document.createElement('div');
+                div.className = 'upgrade';
+                // Added a div for the description below the header
+                div.innerHTML = `
+                    <div class="upgrade-header">
+                        <span>${up.name}</span>
+                        <span>+${up.cps}/s (Offline)</span>
+                    </div>
+                    <div class="upgrade-description">${up.desc}</div>
+                    <button id="up${idx}" onclick="buyUpgrade(${idx})">Loading...</button>
+                `;
+                dom.upgradesDiv.appendChild(div);
+                dom.upgradeButtons[idx] = document.getElementById(`up${idx}`); // Cache the button reference
+            });
+            
+            // Create prestige upgrade buttons
+            Object.entries(prestigeDefs).forEach(([key, def]) => {
+                const div = document.createElement('div');
+                div.className = 'prestige-upgrade';
+                div.innerHTML = `
+                    <div>${def.desc}</div>
+                    <button id="pu${key}" onclick="buyPrestigeUpgrade('${key}')">Loading...</button>
+                `;
+                dom.prestigeUpgradesDiv.appendChild(div);
+                dom.prestigeUpgradeButtons[key] = document.getElementById(`pu${key}`); // Cache the button reference
+            });
+        }
+        
+        // --- Game Automation ---
+
+        // Automatically buys workers if the Auto-Worker prestige upgrade is active
+        function autoWorker() {
+            if (game.prestigeUpgrades.autoWorker > 0) {
+                const workerUpgrade = game.upgrades[0]; // Worker is always the first upgrade
+                const autoBuyFactor = [1, 2, 5]; // How many workers to attempt to buy at once per level
+                const workersToBuy = autoBuyFactor[game.prestigeUpgrades.autoWorker - 1] || 1;
+
+                // Attempt to buy workers multiple times based on autoBuyFactor
+                for (let i = 0; i < workersToBuy; i++) {
+                    const workerCost = Math.floor(workerUpgrade.cost * Math.pow(1.15, workerUpgrade.count));
+                    if (game.coins >= workerCost) {
+                        buyUpgrade(0); // Buy a worker (idx 0)
+                    } else {
+                        break; // Cannot afford more workers, stop trying
+                    }
+                }
+            }
+        }
+        
+        // --- Initialization and Game Loops ---
+
+        // Generate a unique ID for the current browser tab instance
+        const currentTabId = crypto.randomUUID(); 
+        // Store this currentTabId in sessionStorage. sessionStorage data is cleared automatically when the tab is closed.
+        sessionStorage.setItem('currentTabId', currentTabId);
+
+        // Initialize game on window load
+        window.onload = function () {
+            loadGame(); // Load saved game data
+            
+            // Re-initialize session multiplier from its base value for the new online session
+            // This ensures Focus Mode starts fresh when a new session begins
+            game.sessionMultiplier = 1 + (game.prestigeUpgrades.focusMode * 0.5); 
+            
+            updateOfflineCPS(); // Calculate initial offline CPS based on loaded game state
+            processOffline(); // Process offline gains if a new session is detected
+            createUI(); // Create UI elements after loading and processing offline gains
+            updateDisplay(); // Initial display update
+            updateSessionTimer(); // Initial update for session timer
+
+            // Game loops (only UI updates, auto-worker, and saving now. No passive income tick while online.)
+            // Update UI elements and session timer every second
+            setInterval(() => {
+                updateAllUpgradesDisplay(); 
+                updateAllPrestigeUpgradesDisplay(); 
+                updateSessionTimer(); 
+            }, 1000); 
+            
+            // Auto-buy workers every second if the upgrade is active
+            setInterval(autoWorker, 1000); 
+            // Auto-save game state every 10 seconds
+            setInterval(saveGame, 10000); 
+            
+            // Save on page unload to ensure progress is saved when the tab is closed.
+            // This is also where lastActiveSessionId is updated in localStorage.
+            window.addEventListener('beforeunload', saveGame);
+            
+            console.log('True Idle loaded! Progression occurs only while the tab is closed.');
+        };
+    </script>
+</body>
+</html>
